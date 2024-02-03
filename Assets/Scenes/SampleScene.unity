@@ -209,7 +209,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 12.9, y: 12.5, z: -25.12}
+  m_LocalPosition: {x: 50.8, y: 46.9, z: -120.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -511,9 +511,9 @@ LineRenderer:
   m_SortingOrder: 0
   m_Positions:
   - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 25, z: 0}
-  - {x: 25, y: 25, z: 0}
-  - {x: 25, y: 0, z: 0}
+  - {x: 0, y: 100, z: 0}
+  - {x: 100, y: 100, z: 0}
+  - {x: 100, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   m_Parameters:
     serializedVersion: 3
@@ -651,6 +651,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1481258550}
   - component: {fileID: 1481258549}
+  - component: {fileID: 1481258551}
   m_Layer: 0
   m_Name: Map
   m_TagString: Untagged
@@ -674,8 +675,8 @@ MonoBehaviour:
   MapWidth: 100
   minRoomSize: 10
   minPadding: 2
-  roomsList: []
   point: {fileID: 6851307295755134156, guid: a70edef9d006d11458bd0196826aaf7e, type: 3}
+  corridorMesh: {fileID: 7054638164853377282, guid: e921d2c404cd553468a907fd83f59cea, type: 3}
 --- !u!4 &1481258550
 Transform:
   m_ObjectHideFlags: 0
@@ -691,6 +692,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1481258551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1481258548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 976787f43551cc04ab1a8f6f16a0fdd0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1819455627
 GameObject:
   m_ObjectHideFlags: 0

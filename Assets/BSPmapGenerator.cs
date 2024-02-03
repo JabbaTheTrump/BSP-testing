@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 
 public class BSPmapGenerator : MonoBehaviour
@@ -13,9 +14,12 @@ public class BSPmapGenerator : MonoBehaviour
 
     [SerializeField] List<Room> roomsList;
 
-    private List<GameObject> currentMap;
+
+    private List<GameObject> activeRoomList;
+    private List<GameObject> activeCorridorList;
 
     public GameObject point;
+    public GameObject corridorMesh;
 
     int testCount = 0; // a debug count to prevent memory leaks
 
@@ -30,16 +34,31 @@ public class BSPmapGenerator : MonoBehaviour
 
     public void Generate() //Generates a new map
     {
-        roomsList.Clear();
         testCount = 0;
-        if (currentMap != null)
+        if (activeRoomList != null) // Resets the map
         {
-            DestroyMapVisual(currentMap);
+            DestroyMapVisual(activeRoomList);
+
+            if (activeCorridorList != null)
+            {
+                DestroyMapVisual(activeCorridorList);
+            }
         }
 
-        SplitSection(new BoundsInt(0, 0, 0, MapWidth, MapHeight, 1));
-        currentMap = DrawMap(roomsList);
-        //SpawnCorridor(CorridorGenerator.GenerateCorridor(roomsList[0], roomsList[1]));
+        roomsList.Clear();
+
+        SplitSection(new BoundsInt(0, 0, 0, MapWidth, MapHeight, 1)); // Generates the rooms
+
+        List<Vector2Int> roomCenters = new List<Vector2Int>();
+        foreach (Room room in roomsList)
+        {
+            roomCenters.Add(Vector2Int.RoundToInt(room.area.center));
+        }
+
+        HashSet<Vector2Int> corridors = ConnectRooms(roomCenters);
+        activeCorridorList = DrawCorridors(corridors);
+
+        activeRoomList = DrawMap(roomsList); //Spawns and saves a list of all the room's floors
     }
 
    
@@ -143,21 +162,34 @@ public class BSPmapGenerator : MonoBehaviour
 
         SplitSection(roomB);
     }
+    #endregion
 
     private List<GameObject> DrawMap(List<Room> map) //Draws and returns a list of instantiated rooms
     {
         List<GameObject> list = new List<GameObject>();
         foreach (Room room in map)
         {
-            list.Add(DrawRoom(room.roomArea,false));
+            list.Add(DrawRoom(room.area,false));
         }
         return list;
     }
-    #endregion
+
+
+    private List<GameObject> DrawCorridors(HashSet<Vector2Int> corr)
+    {
+        List<GameObject> tiles = new List<GameObject>();
+        foreach(Vector2Int corridorTilePosition in corr)
+        {
+            GameObject tile = Instantiate(point, (Vector2)corridorTilePosition, Quaternion.identity);
+            tiles.Add(tile);
+        }
+
+        return tiles;
+    }
 
     private GameObject DrawRoom(BoundsInt room,bool isSection)  //Draws and returns an instantiated room
     {
-        GameObject tile = Instantiate(point, new Vector3(room.x + 0.5f * room.size.x, room.y + 0.5f * room.size.y), Quaternion.identity);
+        GameObject tile = Instantiate(point, room.center, Quaternion.identity);
         tile.transform.localScale = new Vector2(room.size.x, room.size.y);
         SpriteRenderer spr = tile.GetComponent<SpriteRenderer>();
 
@@ -173,6 +205,73 @@ public class BSPmapGenerator : MonoBehaviour
         return tile;
     }
 
+    private HashSet<Vector2Int> ConnectRooms(List<Vector2Int> roomCenters)
+    {
+        HashSet<Vector2Int> corridors = new HashSet<Vector2Int>();
+        var currentRoomCenter = roomCenters[Random.Range(0, roomCenters.Count)];
+        roomCenters.Remove(currentRoomCenter);
+
+        while (roomCenters.Count > 0)
+        {
+            Vector2Int closest = FindClosestPointTo(currentRoomCenter, roomCenters);
+            roomCenters.Remove(closest);
+            HashSet<Vector2Int> newCorridor = CreateCorridor(currentRoomCenter, closest);
+            currentRoomCenter = closest;
+            corridors.UnionWith(newCorridor);
+        }
+
+        return corridors;
+    }
+
+    private HashSet<Vector2Int> CreateCorridor(Vector2Int currentRoomCenter, Vector2Int destination)
+    {
+        HashSet<Vector2Int> corridor = new HashSet<Vector2Int>();
+        var position = currentRoomCenter;
+        corridor.Add(position);
+        while (position.y != destination.y)
+        {
+            if (destination.y > position.y)
+            {
+                position += Vector2Int.up;
+            }
+            else if (destination.y < position.y)
+            {
+                position += Vector2Int.down;
+            }
+            corridor.Add(position);
+        }
+        while (position.x != destination.x)
+        {
+            if (destination.x > position.x)
+            {
+                position += Vector2Int.right;
+            }
+            else if (destination.x < position.x)
+            {
+                position += Vector2Int.left;
+            }
+            corridor.Add(position);
+        }
+        return corridor;
+    }
+
+    private Vector2Int FindClosestPointTo(Vector2Int currentRoomCenter, List<Vector2Int> roomCenters)
+    {
+        Vector2Int closest = Vector2Int.zero;
+        float distance = float.MaxValue;
+
+        foreach(var position in roomCenters)
+        {
+            float currentDistance = Vector2.Distance(position, currentRoomCenter);
+            if (currentDistance < distance)
+            {
+                distance = currentDistance;
+                closest = position;
+            }
+        }
+        return closest;
+    }
+
     private void DestroyMapVisual(List<GameObject> map) //Destroys all the objects within the list
     {
         foreach (GameObject tile in map)
@@ -180,40 +279,21 @@ public class BSPmapGenerator : MonoBehaviour
             Destroy(tile);
         }
     }
-
-    private void SpawnCorridor(List<Vector2Int> corridor)
-    {
-        foreach(Vector2Int corridorPoint in corridor)
-        {
-            Instantiate(point, ((Vector3Int)corridorPoint), Quaternion.identity);
-        }
-    }
-
 }
 
 public class Room
 {
-    public BoundsInt roomArea { get; private set; }
-    public List<Corridor> connectedCorridors { get; }
+    public BoundsInt area { get; private set; }
+    public List<Room> adjacenedRooms = new List<Room>();  
     
     public Room(BoundsInt area)
     {
         SetArea(area);
     }
 
-
-    public void AddCorridor(Corridor corridor)
-    {
-        connectedCorridors.Add(corridor);
-    }
-
     private void SetArea(BoundsInt area)
     {
-        roomArea = area;
+        this.area = area;
     }
 }
 
-public class Corridor
-{
-
-}

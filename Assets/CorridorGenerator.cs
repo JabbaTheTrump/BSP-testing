@@ -2,18 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CorridorGenerator
-{
-    public int minCorridorSize;
-    public int maxCorridorSize;
 
-    public static List<Vector2Int> GenerateCorridor(BoundsInt room1, BoundsInt room2)
+public class CorridorGenerator : MonoBehaviour
+{
+
+
+    public static List<Vector2Int> GenerateCorridor(Room room1, Room room2)
     {
         List<Vector2Int> corridorTiles = new List<Vector2Int>();
 
         // Get center points of both rooms
-        Vector2Int center1 = new Vector2Int((int)room1.center.x, (int)room1.center.y);
-        Vector2Int center2 = new Vector2Int((int)room2.center.x, (int)room2.center.y);
+        Vector2Int center1 = new Vector2Int((int)room1.area.center.x, (int)room1.area.center.y);
+        Vector2Int center2 = new Vector2Int((int)room2.area.center.x, (int)room2.area.center.y);
 
         // Start from the center of room1
         Vector2Int currentPos = center1;
@@ -40,3 +40,5 @@ public class CorridorGenerator
         return corridorTiles;
     }
 }
+
+
