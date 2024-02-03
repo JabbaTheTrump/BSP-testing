@@ -11,7 +11,7 @@ public class BSPmapGenerator : MonoBehaviour
     [SerializeField] int minRoomSize = 5;
     [SerializeField] int minPadding = 1;
 
-    [SerializeField] List<BoundsInt> roomsList;
+    [SerializeField] List<Room> roomsList;
 
     private List<GameObject> currentMap;
 
@@ -25,11 +25,12 @@ public class BSPmapGenerator : MonoBehaviour
     private void Start()
     {
         minSectionSize = minRoomSize + 2 * minPadding;
-        roomsList = new List<BoundsInt>();
+        roomsList = new List<Room>();
     }
 
-    public void Generate()
+    public void Generate() //Generates a new map
     {
+        roomsList.Clear();
         testCount = 0;
         if (currentMap != null)
         {
@@ -38,9 +39,11 @@ public class BSPmapGenerator : MonoBehaviour
 
         SplitSection(new BoundsInt(0, 0, 0, MapWidth, MapHeight, 1));
         currentMap = DrawMap(roomsList);
-        roomsList.Clear();
+        //SpawnCorridor(CorridorGenerator.GenerateCorridor(roomsList[0], roomsList[1]));
     }
 
+   
+    #region Section Splitting
     private void SplitSection(BoundsInt section) // recursivly splits rooms in a tree format until the leafs are below a threshold
     {
         testCount++;
@@ -84,7 +87,7 @@ public class BSPmapGenerator : MonoBehaviour
         }
     }
 
-    private BoundsInt CreateRoomFromSection(BoundsInt section, int minRoomSize, int padding) //Generates new bounds contained within a BoundsInt parameter
+    private Room CreateRoomFromSection(BoundsInt section, int minRoomSize, int padding) //Generates new bounds contained within a BoundsInt parameter
     {
 
         int newPosX = Random.Range(section.x + padding, section.xMax - minRoomSize - padding);
@@ -96,7 +99,7 @@ public class BSPmapGenerator : MonoBehaviour
         //Debug.Log($"({newPosX}:{newPosY}), width: {newWidth}, height: {newHeight}"); for debug purposes
 
         BoundsInt cutRoom = new BoundsInt(newPosX, newPosY, section.z, newWidth, newHeight, section.size.z);
-        return cutRoom;
+        return new Room(cutRoom);
     }
 
     private void SplitHorizontally(BoundsInt room)
@@ -125,8 +128,6 @@ public class BSPmapGenerator : MonoBehaviour
     private void SplitVertically(BoundsInt room)
     {
         int splitPos = Random.Range(minSectionSize, room.size.x - minSectionSize);
-        Debug.Log("splitPos: " + splitPos);
-
         int height = room.size.y;
         int width = room.size.x;
 
@@ -143,15 +144,16 @@ public class BSPmapGenerator : MonoBehaviour
         SplitSection(roomB);
     }
 
-    private List<GameObject> DrawMap(List<BoundsInt> map) //Draws and returns a list of instantiated rooms
+    private List<GameObject> DrawMap(List<Room> map) //Draws and returns a list of instantiated rooms
     {
         List<GameObject> list = new List<GameObject>();
-        foreach (BoundsInt room in map)
+        foreach (Room room in map)
         {
-            list.Add(DrawRoom(room,false));
+            list.Add(DrawRoom(room.roomArea,false));
         }
         return list;
     }
+    #endregion
 
     private GameObject DrawRoom(BoundsInt room,bool isSection)  //Draws and returns an instantiated room
     {
@@ -178,5 +180,40 @@ public class BSPmapGenerator : MonoBehaviour
             Destroy(tile);
         }
     }
+
+    private void SpawnCorridor(List<Vector2Int> corridor)
+    {
+        foreach(Vector2Int corridorPoint in corridor)
+        {
+            Instantiate(point, ((Vector3Int)corridorPoint), Quaternion.identity);
+        }
+    }
+
+}
+
+public class Room
+{
+    public BoundsInt roomArea { get; private set; }
+    public List<Corridor> connectedCorridors { get; }
+    
+    public Room(BoundsInt area)
+    {
+        SetArea(area);
+    }
+
+
+    public void AddCorridor(Corridor corridor)
+    {
+        connectedCorridors.Add(corridor);
+    }
+
+    private void SetArea(BoundsInt area)
+    {
+        roomArea = area;
+    }
+}
+
+public class Corridor
+{
 
 }
