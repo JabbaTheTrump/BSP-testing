@@ -1,9 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class BSPmapGenerator : MonoBehaviour
 {
@@ -14,9 +12,11 @@ public class BSPmapGenerator : MonoBehaviour
 
     [SerializeField] List<Room> roomsList;
 
+    public Tile floorTile;
+    public Tile wallTile;
 
-    private List<GameObject> activeRoomList;
-    private List<GameObject> activeCorridorList;
+    public Tilemap floorTiles;
+    public Tilemap wallTiles;
 
     public GameObject point;
     public GameObject corridorMesh;
@@ -35,15 +35,9 @@ public class BSPmapGenerator : MonoBehaviour
     public void Generate() //Generates a new map
     {
         testCount = 0;
-        if (activeRoomList != null) // Resets the map
-        {
-            DestroyMapVisual(activeRoomList);
 
-            if (activeCorridorList != null)
-            {
-                DestroyMapVisual(activeCorridorList);
-            }
-        }
+        floorTiles.ClearAllTiles();
+        wallTiles.ClearAllTiles();
 
         roomsList.Clear();
 
@@ -53,12 +47,11 @@ public class BSPmapGenerator : MonoBehaviour
         foreach (Room room in roomsList)
         {
             roomCenters.Add(Vector2Int.RoundToInt(room.area.center));
+            DrawRoom(room.area);
         }
 
         HashSet<Vector2Int> corridors = ConnectRooms(roomCenters);
-        activeCorridorList = DrawCorridors(corridors);
-
-        activeRoomList = DrawMap(roomsList); //Spawns and saves a list of all the room's floors
+        DrawCorridors(corridors);
     }
 
    
@@ -164,51 +157,37 @@ public class BSPmapGenerator : MonoBehaviour
     }
     #endregion
 
-    private List<GameObject> DrawMap(List<Room> map) //Draws and returns a list of instantiated rooms
-    {
-        List<GameObject> list = new List<GameObject>();
-        foreach (Room room in map)
-        {
-            list.Add(DrawRoom(room.area,false));
-        }
-        return list;
-    }
 
-
-    private List<GameObject> DrawCorridors(HashSet<Vector2Int> corr)
+    private void DrawCorridors(HashSet<Vector2Int> corr)
     {
-        List<GameObject> tiles = new List<GameObject>();
         foreach(Vector2Int corridorTilePosition in corr)
         {
-            GameObject tile = Instantiate(point, (Vector2)corridorTilePosition, Quaternion.identity);
-            tiles.Add(tile);
+            floorTiles.SetTile((Vector3Int)corridorTilePosition, floorTile);
         }
-
-        return tiles;
     }
 
-    private GameObject DrawRoom(BoundsInt room,bool isSection)  //Draws and returns an instantiated room
+    private void DrawRoom(BoundsInt room) 
     {
-        GameObject tile = Instantiate(point, room.center, Quaternion.identity);
-        tile.transform.localScale = new Vector2(room.size.x, room.size.y);
-        SpriteRenderer spr = tile.GetComponent<SpriteRenderer>();
-
-        if (isSection)
+        for (int x = room.x; x <= room.xMax; x++)
         {
-            spr.color = Random.ColorHSV();
+            for (int y = room.y; y <= room.yMax; y++)
+            {
+                if (x == room.x || x == room.xMax || y == room.y || y == room.yMax)
+                {
+                    wallTiles.SetTile(new Vector3Int(x, y), wallTile);
+                }
+                else
+                {
+                    floorTiles.SetTile(new Vector3Int(x, y, 0), floorTile);
+                }
+            }
         }
-        else
-        {
-            spr.color = Color.red;
-            spr.sortingOrder = 1;
-        }
-        return tile;
     }
 
     private HashSet<Vector2Int> ConnectRooms(List<Vector2Int> roomCenters)
     {
         HashSet<Vector2Int> corridors = new HashSet<Vector2Int>();
-        var currentRoomCenter = roomCenters[Random.Range(0, roomCenters.Count)];
+        var currentRoomCenter = roomCenters[Random.Range(0, roomCenters.Count)]; 
         roomCenters.Remove(currentRoomCenter);
 
         while (roomCenters.Count > 0)
