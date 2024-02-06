@@ -14,16 +14,16 @@ public class BSPmapGenerator : MonoBehaviour
     public Tile floorTile;
     public Tile wallTile;
 
-    public Tilemap floorTiles;
-    public Tilemap wallTiles;
+    public Tilemap floorTileMap;
+    public Tilemap wallTileMap;
 
     public GameObject point;
     public GameObject corridorMesh;
 
     public void Generate() //Generates a new map
     {
-        floorTiles.ClearAllTiles();
-        wallTiles.ClearAllTiles();
+        floorTileMap.ClearAllTiles();
+        wallTileMap.ClearAllTiles();
 
         List<Room> roomsList = new BSPmap(MapWidth, MapHeight, minRoomLength, minRoomHeight, minPadding).GetRoomsList();
 
@@ -35,7 +35,9 @@ public class BSPmapGenerator : MonoBehaviour
             DrawRoom(room.area);
         }
 
-        HashSet<Vector2Int> corridors = CorridorMapGenerator.ConnectRooms(roomCenters);
+        roomCenters.Remove(roomCenters[roomCenters.Count - 1]);
+
+        HashSet<Vector2Int> corridors = new CorridorMapGenerator(roomCenters, wallTileMap, floorTileMap).ConnectRooms();
         DrawCorridors(corridors);
     }
 
@@ -44,7 +46,29 @@ public class BSPmapGenerator : MonoBehaviour
     {
         foreach(Vector2Int corridorTilePosition in corr)
         {
-            floorTiles.SetTile((Vector3Int)corridorTilePosition, floorTile);
+            floorTileMap.SetTile((Vector3Int)corridorTilePosition, floorTile);
+        }
+
+        foreach(Vector2Int corridorTilePosition in corr)
+        {
+            Vector3Int corPosition = (Vector3Int)corridorTilePosition;
+
+            if (!floorTileMap.HasTile(corPosition + Vector3Int.up)) wallTileMap.SetTile(corPosition + Vector3Int.up, wallTile);
+            if (!floorTileMap.HasTile(corPosition + Vector3Int.down)) wallTileMap.SetTile(corPosition + Vector3Int.down, wallTile);
+            if (!floorTileMap.HasTile(corPosition + Vector3Int.left)) wallTileMap.SetTile(corPosition + Vector3Int.left, wallTile);
+            if (!floorTileMap.HasTile(corPosition + Vector3Int.right)) wallTileMap.SetTile(corPosition + Vector3Int.right, wallTile);
+
+            Vector3Int newpos = corPosition + Vector3Int.up + Vector3Int.left;
+            if (!floorTileMap.HasTile(newpos)) wallTileMap.SetTile(newpos, wallTile);
+
+            newpos = corPosition + Vector3Int.up + Vector3Int.right;
+            if (!floorTileMap.HasTile(newpos)) wallTileMap.SetTile(newpos, wallTile);
+
+            newpos = corPosition + Vector3Int.down + Vector3Int.left;
+            if (!floorTileMap.HasTile(newpos)) wallTileMap.SetTile(newpos, wallTile);
+
+            newpos = corPosition + Vector3Int.down + Vector3Int.right;
+            if (!floorTileMap.HasTile(newpos)) wallTileMap.SetTile(newpos, wallTile);
         }
     }
 
@@ -56,16 +80,14 @@ public class BSPmapGenerator : MonoBehaviour
             {
                 if (x == room.x || x == room.xMax || y == room.y || y == room.yMax)
                 {
-                    wallTiles.SetTile(new Vector3Int(x, y), wallTile);
+                    wallTileMap.SetTile(new Vector3Int(x, y), wallTile);
                 }
                 else
                 {
-                    floorTiles.SetTile(new Vector3Int(x, y, 0), floorTile);
+                    floorTileMap.SetTile(new Vector3Int(x, y, 0), floorTile);
                 }
             }
         }
     }
-
-
 }
 

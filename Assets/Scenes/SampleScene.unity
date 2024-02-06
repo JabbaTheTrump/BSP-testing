@@ -912,12 +912,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MapHeight: 100
   MapWidth: 100
-  minRoomSize: 10
+  minRoomLength: 10
+  minRoomHeight: 10
   minPadding: 2
   floorTile: {fileID: 11400000, guid: c9381851be9aa3940b47b616f3228327, type: 2}
   wallTile: {fileID: 11400000, guid: 98731bedd82079544804cba8899098cc, type: 2}
-  floorTiles: {fileID: 62650366}
-  wallTiles: {fileID: 204192153}
+  floorTileMap: {fileID: 62650366}
+  wallTileMap: {fileID: 204192153}
   point: {fileID: 6851307295755134156, guid: a70edef9d006d11458bd0196826aaf7e, type: 3}
   corridorMesh: {fileID: 7054638164853377282, guid: e921d2c404cd553468a907fd83f59cea, type: 3}
 --- !u!4 &1481258550

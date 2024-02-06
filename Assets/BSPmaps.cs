@@ -89,7 +89,6 @@ public class BSPmap
     private void SplitHorizontally(BoundsInt room)
     {
         int splitPos = Random.Range(minSectionHeight, room.size.y - minSectionHeight); // picks a random position on the y axis to split
-        Debug.Log("splitPos: " + splitPos);
 
         //NOTE - height and width DO NOT take into account the room's position. height = maxY - minY
 
