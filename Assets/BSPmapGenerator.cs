@@ -35,8 +35,6 @@ public class BSPmapGenerator : MonoBehaviour
             DrawRoom(room.area);
         }
 
-        roomCenters.Remove(roomCenters[roomCenters.Count - 1]);
-
         HashSet<Vector2Int> corridors = new CorridorMapGenerator(roomCenters, wallTileMap, floorTileMap).ConnectRooms();
         DrawCorridors(corridors);
     }
