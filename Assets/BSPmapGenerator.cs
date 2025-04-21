@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -31,8 +32,8 @@ public class BSPmapGenerator : MonoBehaviour
 
         foreach (Room room in roomsList)
         {
-            roomCenters.Add(Vector2Int.RoundToInt(room.area.center));
-            DrawRoom(room.area);
+            roomCenters.Add(Vector2Int.RoundToInt(room.Area.center));
+            DrawRoom(room.Area);
         }
 
         HashSet<Vector2Int> corridors = new CorridorMapGenerator(roomCenters, wallTileMap, floorTileMap).ConnectRooms();
@@ -86,6 +87,14 @@ public class BSPmapGenerator : MonoBehaviour
                 }
             }
         }
+    }
+
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Vector2 center = new(MapWidth / 2f, MapHeight / 2f);
+        Gizmos.DrawWireCube(center, new(MapWidth, MapHeight));
     }
 }
 

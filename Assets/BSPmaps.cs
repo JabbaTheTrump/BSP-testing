@@ -4,15 +4,15 @@ using UnityEngine;
 
 public class BSPmap
 {
-    private int minRoomLength;
-    private int minRoomHeight;
-    private int minPadding;
+    readonly int minRoomLength;
+    readonly int minRoomHeight;
+    readonly int minPadding;
     private int testCount = 0;
 
-    private int minSectionLength;
-    private int minSectionHeight;
+    readonly int minSectionLength;
+    readonly int minSectionHeight;
 
-    private List<Room> roomsList = new List<Room>();
+    readonly List<Room> roomsList = new List<Room>();
 
 
     public BSPmap(int mapWidth, int mapHeight, int minRoomLength, int minRoomHeight, int minPadding)
@@ -28,7 +28,7 @@ public class BSPmap
     }
 
 
-    private void SplitSection(BoundsInt section) // recursivly splits rooms in a tree format until the leafs are below a threshold
+    private void SplitSection(BoundsInt section) // recursivly splits rooms in a tree format until the leafs' sizes are below a threshold
     {
         testCount++;
         if (testCount > 300) // checks for a memory leak
@@ -136,7 +136,7 @@ public class BSPmap
 
 public class Room
 {
-    public BoundsInt area { get; private set; }
+    public BoundsInt Area { get; private set; }
     public List<Room> adjacenedRooms = new List<Room>();
 
     public Room(BoundsInt area)
@@ -146,6 +146,6 @@ public class Room
 
     private void SetArea(BoundsInt area)
     {
-        this.area = area;
+        this.Area = area;
     }
 }
